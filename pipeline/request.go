@@ -37,7 +37,7 @@ func NewJSON(file string) []any {
 func NewRequest(request interface{}) {
 	client := &http.Client{}
 	endPoint := os.Getenv("HTTP_ENDPOINT")
-	bearerToken := "Bearer " + os.Getenv("TOKEN")
+	bearerToken := "Bearer " + os.Getenv("BEARER_TOKEN")
 	body, err := json.Marshal(request)
 
 	if err != nil {
