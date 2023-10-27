@@ -14,7 +14,7 @@ var loggerError = config.NewErrorLogger()
 //var loggerInfo = config.NewInfoLogger()
 
 func main() {
-	//A partir da demanda em goroutina, carrega em memoria, processa requisição a requisição e envia HTTP
+
 	var wg sync.WaitGroup
 	err := godotenv.Load()
 
@@ -26,16 +26,22 @@ func main() {
 
 	wg.Add(len(files))
 	for _, file := range files {
+
 		go func(file fs.DirEntry) {
 			defer wg.Done()
-			requests := pipe.NewJSON(file.Name())
+			requests := config.NewJSON(file.Name())
+			nestedWg := sync.WaitGroup{}
 
+			nestedWg.Add(len(requests))
 			for _, request := range requests {
-				pipe.NewRequest(request)
+				go func(request any) {
+					defer nestedWg.Done()
+					pipe.NewRequest(request)
+				}(request)
 			}
 
+			nestedWg.Wait()
 		}(file)
 	}
 	wg.Wait()
-
 }
