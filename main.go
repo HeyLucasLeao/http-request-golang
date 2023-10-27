@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/joho/godotenv"
 )
 
@@ -18,8 +17,6 @@ var loggerInfo = config.NewInfoLogger()
 
 func main() {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
-	var counter int64
 
 	err := godotenv.Load()
 
@@ -38,15 +35,15 @@ func main() {
 			defer wg.Done()
 			requests := config.NewJSON(file.Name())
 			nestedWg := sync.WaitGroup{}
+			nestedMu := sync.Mutex{}
 
 			nestedWg.Add(len(requests))
 			for _, request := range requests {
 				go func(request any) {
-					mu.Lock()
+					nestedMu.Lock()
 					defer nestedWg.Done()
 					pipe.NewRequest(request)
-					counter++
-					mu.Unlock()
+					nestedMu.Unlock()
 				}(request)
 			}
 
@@ -57,5 +54,4 @@ func main() {
 	elapsed := time.Since(start)
 
 	loggerInfo.Printf("Function took %s", elapsed)
-	loggerInfo.Printf("Requests: %s", humanize.Comma(counter))
 }
