@@ -7,32 +7,10 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
 var loggerError = config.NewErrorLogger()
 var requestLogger = config.NewRequestLogger()
-
-func NewJSON(file string) []any {
-	root := "data"
-	pattern := os.Getenv("JSON_FOLDER")
-	path := filepath.Join(root, pattern, file)
-	f, err := os.ReadFile(path)
-
-	if err != nil {
-		loggerError.Fatal(err)
-	}
-
-	requests := []any{}
-
-	err = json.Unmarshal(f, &requests)
-
-	if err != nil {
-		loggerError.Fatal(err)
-	}
-
-	return requests
-}
 
 func NewRequest(request interface{}) {
 	client := &http.Client{}

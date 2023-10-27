@@ -1,9 +1,11 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 var loggerError = NewErrorLogger()
@@ -19,4 +21,25 @@ func NewFile() []fs.DirEntry {
 	}
 
 	return file
+}
+
+func NewJSON(file string) []any {
+	root := "data"
+	pattern := os.Getenv("JSON_FOLDER")
+	path := filepath.Join(root, pattern, file)
+	f, err := os.ReadFile(path)
+
+	if err != nil {
+		loggerError.Fatal(err)
+	}
+
+	requests := []any{}
+
+	err = json.Unmarshal(f, &requests)
+
+	if err != nil {
+		loggerError.Fatal(err)
+	}
+
+	return requests
 }
