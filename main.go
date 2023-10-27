@@ -5,22 +5,29 @@ import (
 	pipe "http-request-golang/pipeline"
 	"io/fs"
 	"sync"
+	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/joho/godotenv"
 )
 
 var loggerError = config.NewErrorLogger()
+var loggerInfo = config.NewInfoLogger()
 
 //var loggerInfo = config.NewInfoLogger()
 
 func main() {
-
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var counter int64
+
 	err := godotenv.Load()
 
 	if err != nil {
 		loggerError.Fatal(err)
 	}
+
+	start := time.Now()
 
 	files := config.NewFile()
 
@@ -35,8 +42,11 @@ func main() {
 			nestedWg.Add(len(requests))
 			for _, request := range requests {
 				go func(request any) {
+					mu.Lock()
 					defer nestedWg.Done()
 					pipe.NewRequest(request)
+					counter++
+					mu.Unlock()
 				}(request)
 			}
 
@@ -44,4 +54,8 @@ func main() {
 		}(file)
 	}
 	wg.Wait()
+	elapsed := time.Since(start)
+
+	loggerInfo.Printf("Function took %s", elapsed)
+	loggerInfo.Printf("Requests: %s", humanize.Comma(counter))
 }
