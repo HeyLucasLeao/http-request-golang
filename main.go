@@ -4,6 +4,7 @@ import (
 	"http-request-golang/config"
 	pipe "http-request-golang/pipeline"
 	"io/fs"
+	"net/http"
 	"sync"
 	"time"
 
@@ -17,7 +18,7 @@ var loggerInfo = config.NewInfoLogger()
 
 func main() {
 	var wg sync.WaitGroup
-
+	chanResp := make(chan *http.Response)
 	err := godotenv.Load()
 
 	if err != nil {
@@ -31,25 +32,30 @@ func main() {
 	wg.Add(len(files))
 	for _, file := range files {
 
+		//Read and Unmarshall concurrently the files
 		go func(file fs.DirEntry) {
 			defer wg.Done()
 			requests := config.NewJSON(file.Name())
 			nestedWg := sync.WaitGroup{}
-			nestedMu := sync.Mutex{}
 
+			//For every value, send concurrently a HTTP Request
 			nestedWg.Add(len(requests))
 			for _, request := range requests {
+
 				go func(request any) {
-					nestedMu.Lock()
 					defer nestedWg.Done()
-					pipe.NewRequest(request)
-					nestedMu.Unlock()
+					resp := pipe.NewRequest(request)
+					chanResp <- resp
 				}(request)
+
+				//Save response in a log file.
+				go pipe.LoggingResponse(<-chanResp)
 			}
 
 			nestedWg.Wait()
 		}(file)
 	}
+
 	wg.Wait()
 	elapsed := time.Since(start)
 

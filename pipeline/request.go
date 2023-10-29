@@ -12,7 +12,7 @@ import (
 var loggerError = config.NewErrorLogger()
 var requestLogger = config.NewRequestLogger()
 
-func NewRequest(request interface{}) {
+func NewRequest(request interface{}) *http.Response {
 	client := &http.Client{}
 	endPoint := os.Getenv("HTTP_ENDPOINT")
 	bearerToken := "Bearer " + os.Getenv("BEARER_TOKEN")
@@ -37,7 +37,12 @@ func NewRequest(request interface{}) {
 		loggerError.Fatal(err)
 	}
 
-	body, err = io.ReadAll(resp.Body)
+	return resp
+
+}
+
+func LoggingResponse(resp *http.Response) {
+	body, err := io.ReadAll(resp.Body)
 
 	if err != nil {
 		loggerError.Fatal(err)
