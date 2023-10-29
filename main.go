@@ -41,13 +41,14 @@ func main() {
 			for _, request := range requests {
 
 				go func(request any) {
-					defer nestedWg.Done()
 					resp := pipe.NewRequest(request)
 					chanResp <- resp
 				}(request)
 
 				//Save response in a log file
 				go config.LoggingResponse(<-chanResp)
+
+				nestedWg.Done()
 			}
 
 			nestedWg.Wait()
