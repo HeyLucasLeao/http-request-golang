@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 )
 
-var loggerError = NewErrorLogger()
-
 func NewFile() []fs.DirEntry {
 	root := "data"
 	pattern := os.Getenv("JSON_FOLDER")

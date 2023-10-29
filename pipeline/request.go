@@ -4,13 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"http-request-golang/config"
-	"io"
 	"net/http"
 	"os"
 )
 
 var loggerError = config.NewErrorLogger()
-var requestLogger = config.NewRequestLogger()
 
 func NewRequest(request interface{}) *http.Response {
 	client := &http.Client{}
@@ -39,22 +37,4 @@ func NewRequest(request interface{}) *http.Response {
 
 	return resp
 
-}
-
-func LoggingResponse(resp *http.Response) {
-	body, err := io.ReadAll(resp.Body)
-
-	if err != nil {
-		loggerError.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusOK {
-		requestLogger.SetPrefix("INFO✅: ")
-		requestLogger.Printf("Code: %d - Body: %s", resp.StatusCode, body)
-		return
-	}
-
-	requestLogger.SetPrefix("ERROR🚨: ")
-	requestLogger.Printf("Code: %d - Body: %s", resp.StatusCode, body)
 }

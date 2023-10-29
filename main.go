@@ -14,8 +14,6 @@ import (
 var loggerError = config.NewErrorLogger()
 var loggerInfo = config.NewInfoLogger()
 
-//var loggerInfo = config.NewInfoLogger()
-
 func main() {
 	var wg sync.WaitGroup
 	chanResp := make(chan *http.Response)
@@ -32,13 +30,13 @@ func main() {
 	wg.Add(len(files))
 	for _, file := range files {
 
-		//Read and Unmarshall concurrently the files
+		//Read and Unmarshall the files concurrently
 		go func(file fs.DirEntry) {
 			defer wg.Done()
 			requests := config.NewJSON(file.Name())
 			nestedWg := sync.WaitGroup{}
 
-			//For every value, send concurrently a HTTP Request
+			//For every value, send concurrently HTTP Request
 			nestedWg.Add(len(requests))
 			for _, request := range requests {
 
@@ -48,8 +46,8 @@ func main() {
 					chanResp <- resp
 				}(request)
 
-				//Save response in a log file.
-				go pipe.LoggingResponse(<-chanResp)
+				//Save response in a log file
+				go config.LoggingResponse(<-chanResp)
 			}
 
 			nestedWg.Wait()
